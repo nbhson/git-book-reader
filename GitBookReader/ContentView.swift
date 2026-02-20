@@ -17,7 +17,6 @@ struct ContentView: View {
             return filterTree(nodes: service.rootNodes, searchText: searchText)
         }
     }
-    
     var body: some View {
         NavigationSplitView {
             // MARK: - Sidebar Menu
