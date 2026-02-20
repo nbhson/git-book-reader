@@ -1,0 +1,1 @@
+{ "objectVersion": 1, "pins": [ { "identity": "markdownui", "kind": "remoteSourceControl", "location": "https://github.com/gonzalezreal/MarkdownUI", "state": { "revision": "2ef6e1c667a42168fd4ad1600dbdb1fdb5bcacff", "version": "2.4.1" } } ], "version": 3 }
