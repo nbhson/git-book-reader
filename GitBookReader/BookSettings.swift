@@ -67,10 +67,3 @@ class BookSettings: ObservableObject {
     }
 }
 
-// Helper to bridge NSColor/UIColor
-#if os(iOS)
-typealias NSColor = UIColor
-extension UIColor {
-    static var textBackgroundColor: UIColor { .systemBackground }
-}
-#endif
