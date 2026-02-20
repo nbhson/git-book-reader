@@ -9,6 +9,8 @@ struct ContentView: View {
     // For iPad/Mac Split View Selection
     @State private var selectedFile: FileNode?
     
+    @EnvironmentObject var settings: BookSettings
+    
     // Derived property for filtering nodes
     var filteredNodes: [FileNode] {
         if searchText.isEmpty {
@@ -128,6 +130,19 @@ struct ContentView: View {
                 .searchable(text: $searchText, prompt: "Tìm kiếm file...")
             }
             .navigationTitle("GitBook")
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        withAnimation {
+                            settings.readingTheme = settings.readingTheme == .dark ? .light : .dark
+                        }
+                    } label: {
+                        Image(systemName: settings.readingTheme == .dark ? "moon.fill" : "sun.max.fill")
+                            .foregroundColor(settings.readingTheme == .dark ? .blue : .orange)
+                    }
+                    .help("Chuyển đổi giao diện Sáng/Tối")
+                }
+            }
             
         } detail: {
             // MARK: - Detail Box
@@ -358,6 +373,7 @@ struct FolderGridView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(BookSettings())
 }
 
 // MARK: - Recent History Sheet
