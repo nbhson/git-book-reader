@@ -2,9 +2,10 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var service = GitHubService()
-    @State private var urlString: String = "https://github.com/apple/swift"
+    @State private var urlString: String = "https://github.com/nbhson"
     @State private var searchText: String = ""
     @State private var showAllHistory: Bool = false
+    @State private var isSearchRepoVisible: Bool = false
     
     // For iPad/Mac Split View Selection
     @State private var selectedFile: FileNode?
@@ -24,84 +25,133 @@ struct ContentView: View {
             // MARK: - Sidebar Menu
             VStack(spacing: 0) {
                 // Header Area
-                VStack(alignment: .leading, spacing: 12) {
-                    
-                    // History (Recent Repos)
-                    if !service.recentRepos.isEmpty {
-                        HStack {
-                            Text("Mở Gần Đây:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            Spacer()
-                            
-                            if service.recentRepos.count > 5 {
-                                Button("Xem tất cả (\(service.recentRepos.count))") {
-                                    showAllHistory = true
-                                }
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                            }
-                        }
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(service.recentRepos.prefix(5), id: \.self) { repoUrl in
-                                    HStack(spacing: 6) {
-                                        Button(action: {
-                                            urlString = repoUrl
-                                            selectedFile = nil
-                                            service.loadRepository(urlString: repoUrl)
-                                        }) {
-                                            Text(URL(string: repoUrl)?.lastPathComponent ?? repoUrl)
-                                                .font(.caption)
-                                                .lineLimit(1)
-                                        }
-                                        .buttonStyle(.plain)
-                                        .foregroundColor(.blue)
-                                        
-                                        Button(action: {
-                                            withAnimation {
-                                                service.recentRepos.removeAll { $0 == repoUrl }
-                                            }
-                                        }) {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .font(.system(size: 10))
-                                                .foregroundColor(.gray.opacity(0.6))
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    .padding(.vertical, 6)
-                                    .padding(.horizontal, 10)
-                                    .background(Color.secondary.opacity(0.1))
-                                    .cornerRadius(8)
-                                }
-                            }
-                        }
-                    }
-                    
-                    TextField("Enter GitHub Repo URL", text: $urlString)
-                        .textFieldStyle(.roundedBorder)
-                        #if os(iOS)
-                        .textInputAutocapitalization(.never)
-                        #endif
-                        .autocorrectionDisabled()
-                        .onSubmit {
-                            selectedFile = nil
-                            service.loadRepository(urlString: urlString)
-                        }
-                    
+                VStack(alignment: .leading, spacing: 0) {
+                    // Nút Toggle
                     Button(action: {
-                        selectedFile = nil
-                        service.loadRepository(urlString: urlString)
+                        withAnimation {
+                            isSearchRepoVisible.toggle()
+                        }
                     }) {
-                        Text("Tải Repository")
-                            .frame(maxWidth: .infinity)
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                            Text("Tìm & Tải Repository")
+                                .font(.headline)
+                            Spacer()
+                            Image(systemName: isSearchRepoVisible ? "chevron.up" : "chevron.down")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(NSColor.windowBackgroundColor))
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.plain)
+                    
+                    if isSearchRepoVisible {
+                        VStack(alignment: .leading, spacing: 12) {
+                            // History (Recent Repos)
+                            if !service.recentRepos.isEmpty {
+                                HStack {
+                                    Text("Mở Gần Đây:")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Spacer()
+                                    
+                                    if service.recentRepos.count > 5 {
+                                        Button("Xem tất cả (\(service.recentRepos.count))") {
+                                            showAllHistory = true
+                                        }
+                                        .font(.caption)
+                                        .foregroundColor(.blue)
+                                    }
+                                }
+                                
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(service.recentRepos.prefix(5), id: \.self) { repoUrl in
+                                            HStack(spacing: 6) {
+                                                Button(action: {
+                                                    urlString = repoUrl
+                                                    selectedFile = nil
+                                                    service.loadRepository(urlString: repoUrl)
+                                                    withAnimation { isSearchRepoVisible = false }
+                                                }) {
+                                                    Text(URL(string: repoUrl)?.lastPathComponent ?? repoUrl)
+                                                        .font(.caption)
+                                                        .lineLimit(1)
+                                                }
+                                                .buttonStyle(.plain)
+                                                .foregroundColor(.blue)
+                                                
+                                                Button(action: {
+                                                    withAnimation {
+                                                        service.recentRepos.removeAll { $0 == repoUrl }
+                                                    }
+                                                }) {
+                                                    Image(systemName: "xmark.circle.fill")
+                                                        .font(.system(size: 10))
+                                                        .foregroundColor(.gray.opacity(0.6))
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                            .padding(.vertical, 6)
+                                            .padding(.horizontal, 10)
+                                            .background(Color.secondary.opacity(0.1))
+                                            .cornerRadius(8)
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Custom TextField with clear button
+                            HStack {
+                                Image(systemName: "link")
+                                    .foregroundColor(.secondary)
+                                TextField("Enter GitHub Repo URL", text: $urlString)
+                                    .textFieldStyle(.plain)
+                                    #if os(iOS)
+                                    .textInputAutocapitalization(.never)
+                                    #endif
+                                    .autocorrectionDisabled()
+                                    .onSubmit {
+                                        selectedFile = nil
+                                        service.loadRepository(urlString: urlString)
+                                        withAnimation { isSearchRepoVisible = false }
+                                    }
+                                
+                                if !urlString.isEmpty {
+                                    Button(action: { urlString = "" }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.gray)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10) // Thay fixed height bằng vertical padding để đẩy chiều cao tự nhiên
+                            .background(Color(NSColor.textBackgroundColor))
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(Color.gray.opacity(0.3), lineWidth: 1))
+                            
+                            Button(action: {
+                                selectedFile = nil
+                                service.loadRepository(urlString: urlString)
+                                withAnimation { isSearchRepoVisible = false }
+                            }) {
+                                Text("Tải Repository")
+                                    .fontWeight(.semibold)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10) // Khớp 100% với vertical padding của Input URL
+                            }
+                            .buttonStyle(.plain)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom)
+                        .background(Color(NSColor.windowBackgroundColor))
+                    }
                 }
-                .padding()
-                .background(Color(NSColor.windowBackgroundColor))
                 
                 Divider()
                 
@@ -112,9 +162,21 @@ struct ContentView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding()
                     } else if let error = service.errorMessage {
-                        Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
+                        VStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.title)
+                                .foregroundColor(.orange)
+                            Text("Lỗi tải dữ liệu")
+                                .font(.headline).bold()
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                        .padding(.bottom, 16)
+                        .frame(maxWidth: .infinity, alignment: .center)
                     } else if filteredNodes.isEmpty && !service.rootNodes.isEmpty {
                         Text("Không tìm thấy kết quả phù hợp.")
                             .foregroundColor(.secondary)

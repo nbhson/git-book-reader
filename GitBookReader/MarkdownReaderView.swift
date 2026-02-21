@@ -5,14 +5,19 @@ import Combine
 
 // Trình quản lý Đọc văn bản
 class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
-    private let synthesizer = AVSpeechSynthesizer()
+    // Lazily initialize to avoid blocking main thread at startup
+    private lazy var synthesizer: AVSpeechSynthesizer = {
+        let synth = AVSpeechSynthesizer()
+        synth.delegate = self
+        return synth
+    }()
+    
     @Published var isSpeaking = false
     
     private var pendingUtterancesCount = 0
     
     override init() {
         super.init()
-        synthesizer.delegate = self
     }
     
     func toggleSpeech(text: String) {
